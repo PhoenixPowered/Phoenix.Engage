@@ -73,9 +73,6 @@
     <Compile Include="..\Phoenix.Common.Engage\TokenReceivedEventArgs.cs">
       <Link>Engage\TokenReceivedEventArgs.cs</Link>
     </Compile>
-    <Compile Include="CustomControl1.cs">
-      <SubType>Code</SubType>
-    </Compile>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="EngageWidget.cs" />

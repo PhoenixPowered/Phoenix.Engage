@@ -56,6 +56,13 @@ namespace Phoenix.Windows.Engage
         static EngageWidget()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(EngageWidget), new FrameworkPropertyMetadata(typeof(EngageWidget)));
+
+#if DEBUG
+            var config = WebCoreConfig.Default;
+            config.LogLevel = LogLevel.Verbose;
+            config.LogPath = Environment.CurrentDirectory;
+            WebCore.Initialize(config, false);
+#endif
         }
 
         #region control events
@@ -188,7 +195,7 @@ namespace Phoenix.Windows.Engage
             _webBrowser = GetTemplateChild(AuthBrowserName) as WebControl;
             _webBrowser.TargetUrlChanged += WebBrowserOnTargetUrlChanged;
 
-            _authenticationManager = new AuthenticationManager();
+            _authenticationManager = new AuthenticationManager(Properties.Resources.EngageHtml);
             _authenticationManager.TokenReceived += AuthenticationManagerOnTokenReceived;
             _authenticationManager.BusyStateChanged += AuthenticationManagerOnBusyStateChanged;
             _authenticationManager.Initialize(this);

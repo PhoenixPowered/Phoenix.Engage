@@ -16,12 +16,10 @@ namespace Phoenix.Engage
 
         internal const string LocalhostTokenUrl = "http://localhost/auth.html";
 
-        private const string WidgetHtmlFormatString =
-            "<html><head><!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\"><title>Auth</title><style> html {{ margin: 0; padding: 0; }} </style><script type=\"text/javascript\">(function() {{if (typeof window.janrain !== 'object') window.janrain = {{}};window.janrain.settings = {{}};janrain.settings.tokenUrl = '{1}';janrain.settings.popup = false;janrain.settings.type = 'embed';janrain.settings.forceReauth = {2};function isReady() {{ janrain.ready = true; }};if (document.addEventListener) {{document.addEventListener(\"DOMContentLoaded\", isReady, false);}} else {{window.attachEvent('onload', isReady);}}var e = document.createElement('script');e.type = 'text/javascript';e.id = 'janrainAuthWidget';if (document.location.protocol === 'https:') {{e.src = 'https://rpxnow.com/js/lib/{0}/engage.js';}} else {{e.src = 'http://widget-cdn.rpxnow.com/js/lib/{0}/engage.js';}}var s = document.getElementsByTagName('script')[0];s.parentNode.insertBefore(e, s);}})();</script></head><body scroll=\"no\"><div id=\"janrainEngageEmbed\"></div></body></html>";
-
         private static readonly ProviderSpecCollection JanrainProviders = new ProviderSpecCollection();
         private readonly SynchronizationContext _uiContext = SynchronizationContext.Current;
         private readonly System.Timers.Timer _docCompleteTimer;
+        private readonly string _baseWidgetHtml;
 
         private string _widgetHtml;
         private IAuthenticationWidget _widget;
@@ -36,11 +34,12 @@ namespace Phoenix.Engage
         /// <summary>
         /// 
         /// </summary>
-        public AuthenticationManager()
+        public AuthenticationManager(string baseWidgetHtml)
         {
             SynchronizationContext context = SynchronizationContext.Current;
             _docCompleteTimer = new System.Timers.Timer(1500) {AutoReset = false};
             _docCompleteTimer.Elapsed += (sender, e) => PostAction(() => OnBusyStateChanged(false), context);
+            _baseWidgetHtml = baseWidgetHtml;
 
         }
 
@@ -151,7 +150,7 @@ namespace Phoenix.Engage
         /// <returns></returns>
         private string GetWidgetHtml(IAuthenticationWidget widget)
         {
-            string htmlFormatString = WidgetHtmlFormatString;
+            string htmlFormatString = _baseWidgetHtml;
 
             if (string.IsNullOrEmpty(htmlFormatString))
                 throw new InvalidOperationException("html resource missing!");
