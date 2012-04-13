@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Phoenix.Security.Janrain
+namespace Phoenix.Engage
 {
     public class BusyStateEventArgs : EventArgs
     {

@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
 using System.Text;
 using System.Threading;
-using Phoenix.Interop;
-using SHDocVw;
+using Awesomium.Core;
 
-namespace Phoenix.Security.Janrain
+namespace Phoenix.Engage
 {
     /// <summary>
     /// 
@@ -16,16 +14,14 @@ namespace Phoenix.Security.Janrain
     {
         #region fields
 
-        private const string LocalhostTokenUrl = "http://localhost/auth.html";
-        public const string AccountSelectionUrl = "about:blank";
+        internal const string LocalhostTokenUrl = "http://localhost/auth.html";
+
+        private const string WidgetHtmlFormatString =
+            "<html><head><!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 4.01//EN\" \"http://www.w3.org/TR/html4/strict.dtd\"><title>Auth</title><style> html {{ margin: 0; padding: 0; }} </style><script type=\"text/javascript\">(function() {{if (typeof window.janrain !== 'object') window.janrain = {{}};window.janrain.settings = {{}};janrain.settings.tokenUrl = '{1}';janrain.settings.popup = false;janrain.settings.type = 'embed';janrain.settings.forceReauth = {2};function isReady() {{ janrain.ready = true; }};if (document.addEventListener) {{document.addEventListener(\"DOMContentLoaded\", isReady, false);}} else {{window.attachEvent('onload', isReady);}}var e = document.createElement('script');e.type = 'text/javascript';e.id = 'janrainAuthWidget';if (document.location.protocol === 'https:') {{e.src = 'https://rpxnow.com/js/lib/{0}/engage.js';}} else {{e.src = 'http://widget-cdn.rpxnow.com/js/lib/{0}/engage.js';}}var s = document.getElementsByTagName('script')[0];s.parentNode.insertBefore(e, s);}})();</script></head><body scroll=\"no\"><div id=\"janrainEngageEmbed\"></div></body></html>";
 
         private static readonly ProviderSpecCollection JanrainProviders = new ProviderSpecCollection();
         private readonly SynchronizationContext _uiContext = SynchronizationContext.Current;
         private readonly System.Timers.Timer _docCompleteTimer;
-
-        private IWebBrowser2 _nativeBrowser;
-        private DWebBrowserEvents_Event _browserEvents;
-        private DWebBrowserEvents2_Event _browserEvents2;
 
         private string _widgetHtml;
         private IAuthenticationWidget _widget;
@@ -85,11 +81,10 @@ namespace Phoenix.Security.Janrain
         public void Initialize(IAuthenticationWidget widget)
         {
             _widgetHtml = GetWidgetHtml(widget);
-            widget.NavigateToString(_widgetHtml);
-            _nativeBrowser = WebBrowserHelper.GetWebBrowser(widget.BrowserDocument);
             _widget = widget;
             _originalHeight = widget.Height;
             _originalWidth = widget.Width;
+            _widget.WebBrowser.LoadURL(LocalhostTokenUrl);
 
             ConnectEvents();
         }
@@ -104,9 +99,9 @@ namespace Phoenix.Security.Janrain
 
         public void Dispose()
         {
-            if(_browserEvents != null && _browserEvents2 != null)
+            if(_widget != null && _widget.WebBrowser != null)
                 DisconnectEvents();
-            _nativeBrowser = null;
+            _widget = null;
 
             if (_docCompleteTimer != null)
             {
@@ -156,7 +151,7 @@ namespace Phoenix.Security.Janrain
         /// <returns></returns>
         private string GetWidgetHtml(IAuthenticationWidget widget)
         {
-            string htmlFormatString = Properties.Resources.JanRainHtml;
+            string htmlFormatString = WidgetHtmlFormatString;
 
             if (string.IsNullOrEmpty(htmlFormatString))
                 throw new InvalidOperationException("html resource missing!");
@@ -186,58 +181,52 @@ namespace Phoenix.Security.Janrain
 
         private void ConnectEvents()
         {
-            _browserEvents = (DWebBrowserEvents_Event)_nativeBrowser;
-            _browserEvents2 = (DWebBrowserEvents2_Event)_nativeBrowser;
-
-            _browserEvents.BeforeNavigate += OnBeforeNavigate;
-            _browserEvents2.DocumentComplete += OnDocumentComplete;
+            _widget.WebBrowser.ResourceRequest += WebBrowserOnResourceRequest;
+            _widget.WebBrowser.LoadCompleted += WebBrowserOnLoadCompleted;
         }
 
         private void DisconnectEvents()
         {
-            _browserEvents.BeforeNavigate -= OnBeforeNavigate;
-            _browserEvents2.DocumentComplete -= OnDocumentComplete;
-
-            _browserEvents = null;
-            _browserEvents2 = null;
+            _widget.WebBrowser.ResourceRequest -= WebBrowserOnResourceRequest;
+            _widget.WebBrowser.LoadCompleted -= WebBrowserOnLoadCompleted;
         }
 
         private void NavigateBackToWidget()
         {
             _widget.Width = _originalWidth;
             _widget.Height = _originalHeight;
-            _widget.NavigateToString(_widgetHtml);
+            _widget.WebBrowser.LoadURL(LocalhostTokenUrl);
         }
 
-        private void ProcessLoginComplete(byte[] postData)
+        private void ProcessLoginComplete(string postData)
         {
-            // if we have no post data, then we can not be authenticated.
-            if (postData == null || postData.Length == 0)
-            {
-                // go back to the selection screen.
-                NavigateBackToWidget();
-                return;
-            }
+            //// if we have no post data, then we can not be authenticated.
+            //if (postData == null || postData.Length == 0)
+            //{
+            //    // go back to the selection screen.
+            //    NavigateBackToWidget();
+            //    return;
+            //}
 
-            // if the last byte in the array represents a null byte skip it and get the string representation of the byte array.
-            string postString = postData.Last() == 0 ? Encoding.Default.GetString(postData, 0, postData.Length - 1) : Encoding.Default.GetString(postData);
+            //// if the last byte in the array represents a null byte skip it and get the string representation of the byte array.
+            //string postString = postData.Last() == 0 ? Encoding.Default.GetString(postData, 0, postData.Length - 1) : Encoding.Default.GetString(postData);
 
             // if we received an empty string from the post data, then we can't be logged in.
-            if (string.IsNullOrEmpty(postString))
+            if (string.IsNullOrEmpty(postData))
             {
                 NavigateBackToWidget();
                 return;
             }
 
             // remove token= from the string so we just have the token data.
-            postString = postString.Replace("token=", string.Empty);
+            postData = postData.Replace("token=", string.Empty);
 
             DisconnectEvents();
 
-            PostAction(() => OnTokenReceived(postString));
+            PostAction(() => OnTokenReceived(postData));
             PostAction(() => OnBusyStateChanged(false));
 
-            _widget.Navigate(AccountSelectionUrl);
+            NavigateBackToWidget();
         }
 
         private void UpdateWidgetSize(string url)
@@ -325,30 +314,46 @@ namespace Phoenix.Security.Janrain
 
         #region event handlers
 
-        void OnDocumentComplete(object automationObject, ref object url)
+        private void WebBrowserOnLoadCompleted(object sender, EventArgs eventArgs)
         {
-            if (_docCompleteTimer.Enabled)
+            if(_docCompleteTimer.Enabled)
                 _docCompleteTimer.Stop();
 
             _docCompleteTimer.Start();
         }
 
-        void OnBeforeNavigate(string url, int flags, string targetFrameName, ref object postData, string headers, ref bool cancel)
+        private ResourceResponse WebBrowserOnResourceRequest(object sender, ResourceRequestEventArgs resourceRequestEventArgs)
         {
             _docCompleteTimer.Stop();
             PostAction(() => OnBusyStateChanged(true));
 
+            string url = resourceRequestEventArgs.Request.Url;
+
             if (url.StartsWith(LocalhostTokenUrl, StringComparison.InvariantCultureIgnoreCase))
             {
-                cancel = true;
-                byte[] data = (byte[])postData;
-                PostAction(() => ProcessLoginComplete(data));
+                if (resourceRequestEventArgs.Request.Method.Equals("post", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    resourceRequestEventArgs.Request.Cancel();
+                    if (resourceRequestEventArgs.Request.UploadElementsCount < 1)
+                        throw new InvalidOperationException();
+
+                    var uploadElement = resourceRequestEventArgs.Request.GetUploadElement(0);
+                    string data = uploadElement.GetBytes();
+                    PostAction(() => ProcessLoginComplete(data));
+                }
+                else
+                {
+                    var data = Encoding.Default.GetBytes(_widgetHtml);
+                    return new ResourceResponse(data, "text/html");
+                }
             }
 
             if (url.Contains("rpxnow.com/") && url.Contains("/start"))
             {
                 PostAction(() => UpdateWidgetSize(url));
             }
+
+            return null;
         }
 
         #endregion

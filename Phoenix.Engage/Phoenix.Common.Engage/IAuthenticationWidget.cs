@@ -1,12 +1,15 @@
 ﻿using System;
+using Awesomium.Core;
 
-namespace Phoenix.Security.Janrain
+namespace Phoenix.Engage
 {
-    public interface IAuthenticationWidget : IWebBrowser
+    public interface IAuthenticationWidget
     {
-        String ApplicationName { get; set; }
-        bool ForceReauth { get; set; }
+        String ApplicationName { get; }
+        bool ForceReauth { get; }
+        IWebView WebBrowser { get; }
         double Width { get; set; }
         double Height { get; set; }
+
     }
 }

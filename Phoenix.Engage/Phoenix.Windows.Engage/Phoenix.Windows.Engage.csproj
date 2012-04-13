@@ -34,6 +34,12 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Awesomium.Core, Version=1.6.5.0, Culture=neutral, PublicKeyToken=e1a0d7c8071a5214, processorArchitecture=x86">
+      <HintPath>..\lib\Awesomium\Awesomium.Core.dll</HintPath>
+    </Reference>
+    <Reference Include="Awesomium.Windows.Controls, Version=1.6.5.0, Culture=neutral, PublicKeyToken=7a34e179b8b61c39, processorArchitecture=x86">
+      <HintPath>..\lib\Awesomium\Awesomium.Windows.Controls.dll</HintPath>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
@@ -49,15 +55,30 @@
     <Reference Include="PresentationFramework" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="SwitchAccountsCommand.cs" />
+    <Compile Include="TokenReceivedEventArgs.cs" />
     <Page Include="Themes\Generic.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
     </Page>
+    <Compile Include="..\Phoenix.Common.Engage\AuthenticationManager.cs">
+      <Link>Engage\AuthenticationManager.cs</Link>
+    </Compile>
+    <Compile Include="..\Phoenix.Common.Engage\BusyStateEventArgs.cs">
+      <Link>Engage\BusyStateEventArgs.cs</Link>
+    </Compile>
+    <Compile Include="..\Phoenix.Common.Engage\IAuthenticationWidget.cs">
+      <Link>Engage\IAuthenticationWidget.cs</Link>
+    </Compile>
+    <Compile Include="..\Phoenix.Common.Engage\TokenReceivedEventArgs.cs">
+      <Link>Engage\TokenReceivedEventArgs.cs</Link>
+    </Compile>
     <Compile Include="CustomControl1.cs">
       <SubType>Code</SubType>
     </Compile>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="EngageWidget.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>

@@ -1,0 +1,12 @@
+﻿<Window x:Class="TestWpfApplication.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:phx="clr-namespace:Phoenix.Windows.Engage;assembly=Phoenix.Windows.Engage"
+        Title="MainWindow" Height="350" Width="525">
+    <Grid>
+        <Button Width="75" Height="24" Content="test" x:Name="btnTest" Click="btnTest_Click" />
+        <Popup Placement="{Binding ElementName=btnTest}" x:Name="popup">
+            <phx:EngageWidget ApplicationName="phx-jabbr-dev" Width="380" Height="166" />
+        </Popup>
+    </Grid>
+</Window>
