@@ -5,8 +5,9 @@
         Title="MainWindow" Height="350" Width="525">
     <Grid>
         <Button Width="75" Height="24" Content="test" x:Name="btnTest" Click="btnTest_Click" />
-        <Popup Placement="{Binding ElementName=btnTest}" x:Name="popup">
+        <Popup PlacementTarget="{Binding ElementName=btnTest}" x:Name="popup">
             <phx:EngageWidget ApplicationName="phx-jabbr-dev" Width="380" Height="166" />
+            <!--<phx:EngageWidget2 Width="380" Height="166" />-->
         </Popup>
     </Grid>
 </Window>

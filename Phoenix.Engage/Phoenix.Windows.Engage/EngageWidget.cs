@@ -191,9 +191,8 @@ namespace Phoenix.Windows.Engage
         {
             base.OnApplyTemplate();
 
-            WebCore.Update();
             _webBrowser = GetTemplateChild(AuthBrowserName) as WebControl;
-            _webBrowser.TargetUrlChanged += WebBrowserOnTargetUrlChanged;
+            _webBrowser.BeginNavigation += WebBrowserOnBeginNavigation;
 
             _authenticationManager = new AuthenticationManager(Properties.Resources.EngageHtml);
             _authenticationManager.TokenReceived += AuthenticationManagerOnTokenReceived;
@@ -203,13 +202,14 @@ namespace Phoenix.Windows.Engage
             SwitchAccounts = new SwitchAccountsCommand(_authenticationManager);
         }
 
-        private void WebBrowserOnTargetUrlChanged(object sender, UrlEventArgs urlEventArgs)
+        private void WebBrowserOnBeginNavigation(object sender, BeginNavigationEventArgs beginNavigationEventArgs)
         {
-            if(SwitchAccounts == null)
+            if (SwitchAccounts == null)
                 return;
 
-            var switchAccounts = (SwitchAccountsCommand) SwitchAccounts;
-            switchAccounts.IsEnabled = urlEventArgs.Url.Equals(AuthenticationManager.LocalhostTokenUrl) == false;
+            string url = beginNavigationEventArgs.Url;
+            var switchAccounts = (SwitchAccountsCommand)SwitchAccounts;
+            switchAccounts.IsEnabled = url.Equals(AuthenticationManager.LocalhostTokenUrl) == false;
         }
 
         private void AuthenticationManagerOnBusyStateChanged(object sender, BusyStateEventArgs busyStateEventArgs)

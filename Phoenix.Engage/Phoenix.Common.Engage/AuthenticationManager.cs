@@ -83,9 +83,9 @@ namespace Phoenix.Engage
             _widget = widget;
             _originalHeight = widget.Height;
             _originalWidth = widget.Width;
-            _widget.WebBrowser.LoadURL(LocalhostTokenUrl);
 
             ConnectEvents();
+            _widget.WebBrowser.LoadURL(LocalhostTokenUrl);
         }
 
         /// <summary>
@@ -158,6 +158,7 @@ namespace Phoenix.Engage
             string forceReauth = widget.ForceReauth.ToString(CultureInfo.InvariantCulture).ToLower();
 
             return string.Format(htmlFormatString, widget.ApplicationName, LocalhostTokenUrl, forceReauth);
+            //return _baseWidgetHtml;
         }
 
         /// <summary>
@@ -182,6 +183,7 @@ namespace Phoenix.Engage
         {
             _widget.WebBrowser.ResourceRequest += WebBrowserOnResourceRequest;
             _widget.WebBrowser.LoadCompleted += WebBrowserOnLoadCompleted;
+            _widget.WebBrowser.BeginNavigation += WebBrowserOnBeginNavigation;
         }
 
         private void DisconnectEvents()
@@ -313,9 +315,22 @@ namespace Phoenix.Engage
 
         #region event handlers
 
+        private void WebBrowserOnBeginNavigation(object sender, BeginNavigationEventArgs beginNavigationEventArgs)
+        {
+            string url = beginNavigationEventArgs.Url;
+
+            _docCompleteTimer.Stop();
+            PostAction(() => OnBusyStateChanged(true));
+
+            if (url.Contains("rpxnow.com/") && url.Contains("/start"))
+            {
+                PostAction(() => UpdateWidgetSize(url));
+            }
+        }
+
         private void WebBrowserOnLoadCompleted(object sender, EventArgs eventArgs)
         {
-            if(_docCompleteTimer.Enabled)
+            if (_docCompleteTimer.Enabled)
                 _docCompleteTimer.Stop();
 
             _docCompleteTimer.Start();
@@ -323,9 +338,6 @@ namespace Phoenix.Engage
 
         private ResourceResponse WebBrowserOnResourceRequest(object sender, ResourceRequestEventArgs resourceRequestEventArgs)
         {
-            _docCompleteTimer.Stop();
-            PostAction(() => OnBusyStateChanged(true));
-
             string url = resourceRequestEventArgs.Request.Url;
 
             if (url.StartsWith(LocalhostTokenUrl, StringComparison.InvariantCultureIgnoreCase))
@@ -342,14 +354,10 @@ namespace Phoenix.Engage
                 }
                 else
                 {
-                    var data = Encoding.Default.GetBytes(_widgetHtml);
-                    return new ResourceResponse(data, "text/html");
+                    var data = Encoding.UTF8.GetBytes(_widgetHtml);
+                    var response = new ResourceResponse(data, "text/html");
+                    return response;
                 }
-            }
-
-            if (url.Contains("rpxnow.com/") && url.Contains("/start"))
-            {
-                PostAction(() => UpdateWidgetSize(url));
             }
 
             return null;
