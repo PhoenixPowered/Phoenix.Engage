@@ -14,7 +14,8 @@ namespace Phoenix.Engage
     {
         #region fields
 
-        internal const string LocalhostTokenUrl = "http://localhost/auth.html";
+        internal const string LocalhostWidgetUrl = "http://localhost/auth.html";
+        internal readonly string LocalhostTokenUrl;
 
         private static readonly ProviderSpecCollection JanrainProviders = new ProviderSpecCollection();
         private readonly SynchronizationContext _uiContext = SynchronizationContext.Current;
@@ -37,10 +38,10 @@ namespace Phoenix.Engage
         public AuthenticationManager(string baseWidgetHtml)
         {
             SynchronizationContext context = SynchronizationContext.Current;
-            _docCompleteTimer = new System.Timers.Timer(1500) {AutoReset = false};
+            _docCompleteTimer = new System.Timers.Timer(500) {AutoReset = false};
             _docCompleteTimer.Elapsed += (sender, e) => PostAction(() => OnBusyStateChanged(false), context);
             _baseWidgetHtml = baseWidgetHtml;
-
+            LocalhostTokenUrl = LocalhostWidgetUrl + "?token";
         }
 
         /// <summary>
@@ -85,7 +86,7 @@ namespace Phoenix.Engage
             _originalWidth = widget.Width;
 
             ConnectEvents();
-            _widget.WebBrowser.LoadURL(LocalhostTokenUrl);
+            _widget.WebBrowser.LoadURL(LocalhostWidgetUrl);
         }
 
         /// <summary>
@@ -157,8 +158,7 @@ namespace Phoenix.Engage
 
             string forceReauth = widget.ForceReauth.ToString(CultureInfo.InvariantCulture).ToLower();
 
-            return string.Format(htmlFormatString, widget.ApplicationName, LocalhostTokenUrl, forceReauth);
-            //return _baseWidgetHtml;
+            return string.Format(htmlFormatString, widget.ApplicationName, LocalhostWidgetUrl, forceReauth);
         }
 
         /// <summary>
@@ -190,28 +190,18 @@ namespace Phoenix.Engage
         {
             _widget.WebBrowser.ResourceRequest -= WebBrowserOnResourceRequest;
             _widget.WebBrowser.LoadCompleted -= WebBrowserOnLoadCompleted;
+            _widget.WebBrowser.BeginNavigation -= WebBrowserOnBeginNavigation;
         }
 
         private void NavigateBackToWidget()
         {
             _widget.Width = _originalWidth;
             _widget.Height = _originalHeight;
-            _widget.WebBrowser.LoadURL(LocalhostTokenUrl);
+            _widget.WebBrowser.LoadURL(LocalhostWidgetUrl);
         }
 
         private void ProcessLoginComplete(string postData)
         {
-            //// if we have no post data, then we can not be authenticated.
-            //if (postData == null || postData.Length == 0)
-            //{
-            //    // go back to the selection screen.
-            //    NavigateBackToWidget();
-            //    return;
-            //}
-
-            //// if the last byte in the array represents a null byte skip it and get the string representation of the byte array.
-            //string postString = postData.Last() == 0 ? Encoding.Default.GetString(postData, 0, postData.Length - 1) : Encoding.Default.GetString(postData);
-
             // if we received an empty string from the post data, then we can't be logged in.
             if (string.IsNullOrEmpty(postData))
             {
@@ -221,8 +211,6 @@ namespace Phoenix.Engage
 
             // remove token= from the string so we just have the token data.
             postData = postData.Replace("token=", string.Empty);
-
-            DisconnectEvents();
 
             PostAction(() => OnTokenReceived(postData));
             PostAction(() => OnBusyStateChanged(false));
@@ -317,15 +305,7 @@ namespace Phoenix.Engage
 
         private void WebBrowserOnBeginNavigation(object sender, BeginNavigationEventArgs beginNavigationEventArgs)
         {
-            string url = beginNavigationEventArgs.Url;
-
-            _docCompleteTimer.Stop();
-            PostAction(() => OnBusyStateChanged(true));
-
-            if (url.Contains("rpxnow.com/") && url.Contains("/start"))
-            {
-                PostAction(() => UpdateWidgetSize(url));
-            }
+            ProcessBeginNavigation(beginNavigationEventArgs.Url);
         }
 
         private void WebBrowserOnLoadCompleted(object sender, EventArgs eventArgs)
@@ -340,11 +320,11 @@ namespace Phoenix.Engage
         {
             string url = resourceRequestEventArgs.Request.Url;
 
-            if (url.StartsWith(LocalhostTokenUrl, StringComparison.InvariantCultureIgnoreCase))
+            if (url.StartsWith(LocalhostWidgetUrl, StringComparison.InvariantCultureIgnoreCase))
             {
-                if (resourceRequestEventArgs.Request.Method.Equals("post", StringComparison.InvariantCultureIgnoreCase))
+                if (resourceRequestEventArgs.Request.Method.Equals("post", StringComparison.InvariantCultureIgnoreCase)
+                    && resourceRequestEventArgs.Request.UploadElementsCount > 0)
                 {
-                    resourceRequestEventArgs.Request.Cancel();
                     if (resourceRequestEventArgs.Request.UploadElementsCount < 1)
                         throw new InvalidOperationException();
 
@@ -352,15 +332,31 @@ namespace Phoenix.Engage
                     string data = uploadElement.GetBytes();
                     PostAction(() => ProcessLoginComplete(data));
                 }
-                else
-                {
-                    var data = Encoding.UTF8.GetBytes(_widgetHtml);
-                    var response = new ResourceResponse(data, "text/html");
-                    return response;
-                }
+
+                var widgetBytes = Encoding.UTF8.GetBytes(_widgetHtml);
+                var response = new ResourceResponse(widgetBytes, "text/html");
+
+                return response;
             }
 
             return null;
+        }
+
+        private void ProcessBeginNavigation(string url)
+        {
+            _docCompleteTimer.Stop();
+            PostAction(() => OnBusyStateChanged(true));
+
+            if (url.Contains("rpxnow.com/") && url.Contains("/start"))
+            {
+                PostAction(() => UpdateWidgetSize(url));
+            }
+
+            if (url.Equals(LocalhostWidgetUrl) && !_widget.Height.Equals(_originalHeight))
+            {
+                _widget.Height = _originalHeight;
+                _widget.Width = _originalWidth;
+            }
         }
 
         #endregion

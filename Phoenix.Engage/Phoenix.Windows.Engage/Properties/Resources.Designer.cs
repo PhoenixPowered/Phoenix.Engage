@@ -65,7 +65,7 @@ namespace Phoenix.Windows.Engage.Properties {
         ///&lt;head&gt;
         ///&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.01//EN&quot; &quot;http://www.w3.org/TR/html4/strict.dtd&quot;&gt;
         ///	&lt;title&gt;Auth&lt;/title&gt;
-        ///&lt;style&gt; html {{ margin: 0; padding: 0; }} &lt;/style&gt;
+        ///&lt;style&gt; html {{ margin: 0; padding: 0; overflow: hidden; }} body {{ margin: 0; padding: 0; }} &lt;/style&gt;
         ///&lt;script type=&quot;text/javascript&quot;&gt;
         ///(function() {{
         ///    if (typeof window.janrain !== &apos;object&apos;) window.janrain = {{}};
@@ -74,37 +74,11 @@ namespace Phoenix.Windows.Engage.Properties {
         ///    janrain.settings.tokenUrl = &apos;{1}&apos;;
         ///    janrain.settings.popup = false;
         ///    janrain.settings.type = &apos;embed&apos;;
-        ///    janrain.settings.forceReauth = {2};
-        ///
-        ///    function [rest of string was truncated]&quot;;.
+        ///    [rest of string was truncated]&quot;;.
         /// </summary>
         internal static string EngageHtml {
             get {
                 return ResourceManager.GetString("EngageHtml", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to &lt;html&gt;
-        ///&lt;head&gt;
-        ///&lt;script type=&quot;text/javascript&quot;&gt;
-        ///(function() {
-        ///    if (typeof window.janrain !== &apos;object&apos;) window.janrain = {};
-        ///    if (typeof window.janrain.settings !== &apos;object&apos;) window.janrain.settings = {};
-        ///    
-        ///    janrain.settings.tokenUrl = &apos;http://localhost/auth.html&apos;;
-        ///
-        ///    function isReady() { janrain.ready = true; };
-        ///    if (document.addEventListener) {
-        ///      document.addEventListener(&quot;DOMContentLoaded&quot;, isReady, false);
-        ///    } else {
-        ///      window.attachEvent(&apos;onload&apos;, isReady);
-        ///    }
-        ///        /// [rest of string was truncated]&quot;;.
-        /// </summary>
-        internal static string EngageHtmlPlain {
-            get {
-                return ResourceManager.GetString("EngageHtmlPlain", resourceCulture);
             }
         }
     }

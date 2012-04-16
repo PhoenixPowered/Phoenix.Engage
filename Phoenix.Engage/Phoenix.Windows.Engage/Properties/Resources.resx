@@ -122,7 +122,7 @@
 &lt;head&gt;
 &lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"&gt;
 	&lt;title&gt;Auth&lt;/title&gt;
-&lt;style&gt; html {{ margin: 0; padding: 0; }} &lt;/style&gt;
+&lt;style&gt; html {{ margin: 0; padding: 0; overflow: hidden; }} body {{ margin: 0; padding: 0; }} &lt;/style&gt;
 &lt;script type="text/javascript"&gt;
 (function() {{
     if (typeof window.janrain !== 'object') window.janrain = {{}};
@@ -156,84 +156,6 @@
 &lt;/script&gt;
 &lt;/head&gt;
 &lt;body scroll="no"&gt;
-&lt;div id="janrainEngageEmbed"&gt;&lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;</value>
-    <comment>&lt;html&gt;
-&lt;head&gt;
-&lt;!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd"&gt;
-	&lt;title&gt;Auth&lt;/title&gt;
-&lt;style&gt; html {{ margin: 0; padding: 0; }} &lt;/style&gt;
-&lt;script type="text/javascript"&gt;
-(function() {{
-    if (typeof window.janrain !== 'object') window.janrain = {{}};
-    window.janrain.settings = {{}};
-    
-    janrain.settings.tokenUrl = '{1}';
-    janrain.settings.popup = false;
-    janrain.settings.type = 'embed';
-    janrain.settings.forceReauth = {2};
-
-    function isReady() {{ janrain.ready = true; }};
-    if (document.addEventListener) {{
-      document.addEventListener("DOMContentLoaded", isReady, false);
-    }} else {{
-      window.attachEvent('onload', isReady);
-    }}
-
-    var e = document.createElement('script');
-    e.type = 'text/javascript';
-    e.id = 'janrainAuthWidget';
-
-    if (document.location.protocol === 'https:') {{
-      e.src = 'https://rpxnow.com/js/lib/{0}/engage.js';
-    }} else {{
-      e.src = 'http://widget-cdn.rpxnow.com/js/lib/{0}/engage.js';
-    }}
-
-    var s = document.getElementsByTagName('script')[0];
-    s.parentNode.insertBefore(e, s);
-}})();
-&lt;/script&gt;
-&lt;/head&gt;
-&lt;body scroll="no"&gt;
-&lt;div id="janrainEngageEmbed"&gt;&lt;/div&gt;
-&lt;/body&gt;
-&lt;/html&gt;</comment>
-  </data>
-  <data name="EngageHtmlPlain" xml:space="preserve">
-    <value>&lt;html&gt;
-&lt;head&gt;
-&lt;script type="text/javascript"&gt;
-(function() {
-    if (typeof window.janrain !== 'object') window.janrain = {};
-    if (typeof window.janrain.settings !== 'object') window.janrain.settings = {};
-    
-    janrain.settings.tokenUrl = 'http://localhost/auth.html';
-
-    function isReady() { janrain.ready = true; };
-    if (document.addEventListener) {
-      document.addEventListener("DOMContentLoaded", isReady, false);
-    } else {
-      window.attachEvent('onload', isReady);
-    }
-
-    var e = document.createElement('script');
-    e.type = 'text/javascript';
-    e.id = 'janrainAuthWidget';
-
-    if (document.location.protocol === 'https:') {
-      e.src = 'https://rpxnow.com/js/lib/phx-jabbr-dev/engage.js';
-    } else {
-      e.src = 'http://widget-cdn.rpxnow.com/js/lib/phx-jabbr-dev/engage.js';
-    }
-
-    var s = document.getElementsByTagName('script')[0];
-    s.parentNode.insertBefore(e, s);
-})();
-&lt;/script&gt;
-&lt;/head&gt;
-&lt;body&gt;
 &lt;div id="janrainEngageEmbed"&gt;&lt;/div&gt;
 &lt;/body&gt;
 &lt;/html&gt;</value>

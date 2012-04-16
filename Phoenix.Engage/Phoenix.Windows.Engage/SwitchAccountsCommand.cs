@@ -10,6 +10,7 @@ namespace Phoenix.Windows.Engage
     internal class SwitchAccountsCommand : ICommand
     {
         private bool _isEnabled;
+        private bool _disposed;
         private readonly AuthenticationManager _authManager;
 
         public SwitchAccountsCommand(AuthenticationManager authManager)

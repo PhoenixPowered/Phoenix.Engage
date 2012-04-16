@@ -28,5 +28,10 @@ namespace TestWpfApplication
         {
             popup.IsOpen = true;
         }
+
+        private void engage_TokenReceived(object sender, Phoenix.Windows.Engage.TokenReceivedEventArgs e)
+        {
+            MessageBox.Show(e.Token);
+        }
     }
 }

@@ -1,19 +1,10 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
-using Phoenix.Engage;
 using Awesomium.Core;
 using Awesomium.Windows.Controls;
+using Phoenix.Engage;
 
 namespace Phoenix.Windows.Engage
 {
@@ -48,11 +39,17 @@ namespace Phoenix.Windows.Engage
     /// </summary>
     public class EngageWidget : Control, IAuthenticationWidget
     {
+        #region fields
+
         private const string AuthBrowserName = "AuthBrowser";
 
         private WebControl _webBrowser;
-        private AuthenticationManager _authenticationManager;
+        private AuthenticationManager _authenticationManager; 
 
+        #endregion
+
+        #region constructors
+        
         static EngageWidget()
         {
             DefaultStyleKeyProperty.OverrideMetadata(typeof(EngageWidget), new FrameworkPropertyMetadata(typeof(EngageWidget)));
@@ -64,6 +61,8 @@ namespace Phoenix.Windows.Engage
             WebCore.Initialize(config, false);
 #endif
         }
+
+        #endregion
 
         #region control events
 
@@ -93,20 +92,7 @@ namespace Phoenix.Windows.Engage
 
         #region control properties
 
-        #region CollapseBrowserOnBusy Property
-
-        public static readonly DependencyProperty CollapseBrowserOnBusyProperty =
-            DependencyProperty.Register("CollapseBrowserOnBusy", typeof(bool), typeof(EngageWidget), new PropertyMetadata(true));
-
-        public bool CollapseBrowserOnBusy
-        {
-            get { return (bool)GetValue(CollapseBrowserOnBusyProperty); }
-            set { SetValue(CollapseBrowserOnBusyProperty, value); }
-        }
-
-        #endregion
-
-        #region ApplicationName Property
+        #region ApplicationName Dependency Property
 
         public static readonly DependencyProperty ApplicationNameProperty =
             DependencyProperty.Register("ApplicationName", typeof(string), typeof(EngageWidget), new PropertyMetadata(default(string)));
@@ -119,20 +105,11 @@ namespace Phoenix.Windows.Engage
 
         #endregion
 
-        #region IsBusy Property
+        #region IsBusy Dependency Property
 
         public static readonly DependencyProperty IsBusyProperty =
             DependencyProperty.Register("IsBusy", typeof(bool), typeof(EngageWidget),
-                                        new PropertyMetadata(default(bool), (d, e) =>
-                                        {
-                                            var widget = (EngageWidget)d;
-                                            if (!widget.CollapseBrowserOnBusy)
-                                                return;
-                                            widget._webBrowser.Visibility =
-                                                (bool)e.NewValue
-                                                    ? Visibility.Collapsed
-                                                    : Visibility.Visible;
-                                        }));
+                                        new PropertyMetadata(default(bool)));
         public bool IsBusy
         {
             get { return (bool)GetValue(IsBusyProperty); }
@@ -141,7 +118,7 @@ namespace Phoenix.Windows.Engage
 
         #endregion
 
-        #region TokenValue Property
+        #region TokenValue Dependency Property
 
         public static readonly DependencyProperty TokenValueProperty =
             DependencyProperty.Register("TokenValue", typeof(string), typeof(EngageWidget), new PropertyMetadata(default(string)));
@@ -154,7 +131,7 @@ namespace Phoenix.Windows.Engage
 
         #endregion
 
-        #region ForceReauth Property
+        #region ForceReauth Dependency Property
 
         public static readonly DependencyProperty ForceReauthProperty =
             DependencyProperty.Register("ForceReauth", typeof(bool), typeof(EngageWidget), new PropertyMetadata(default(bool)));
@@ -167,7 +144,7 @@ namespace Phoenix.Windows.Engage
 
         #endregion
 
-        #region SwitchAccounts Property
+        #region SwitchAccounts Dependency Property
 
         public static readonly DependencyProperty SwitchAccountsProperty =
             DependencyProperty.Register("SwitchAccounts", typeof(ICommand), typeof(EngageWidget), new PropertyMetadata(default(ICommand)));
@@ -180,18 +157,29 @@ namespace Phoenix.Windows.Engage
 
         #endregion
 
-        #endregion
-
-        public IWebView WebBrowser
+        IWebView IAuthenticationWidget.WebBrowser
         {
             get { return _webBrowser; }
         }
 
+        #endregion
+
+        #region methods
+        
         public override void OnApplyTemplate()
         {
             base.OnApplyTemplate();
 
+            DetachFromVisualTree();
+            AttachToVisualTree();
+        }
+
+        private void AttachToVisualTree()
+        {
             _webBrowser = GetTemplateChild(AuthBrowserName) as WebControl;
+            if (_webBrowser == null)
+                throw new InvalidOperationException("WebControl not found!");
+
             _webBrowser.BeginNavigation += WebBrowserOnBeginNavigation;
 
             _authenticationManager = new AuthenticationManager(Properties.Resources.EngageHtml);
@@ -202,6 +190,27 @@ namespace Phoenix.Windows.Engage
             SwitchAccounts = new SwitchAccountsCommand(_authenticationManager);
         }
 
+        private void DetachFromVisualTree()
+        {
+            if (_authenticationManager != null)
+            {
+                _authenticationManager.TokenReceived -= AuthenticationManagerOnTokenReceived;
+                _authenticationManager.BusyStateChanged -= AuthenticationManagerOnBusyStateChanged;
+                _authenticationManager.Dispose();
+                _authenticationManager = null;
+            }
+
+            if (_webBrowser != null)
+            {
+                _webBrowser.BeginNavigation -= WebBrowserOnBeginNavigation;
+                _webBrowser = null;
+            }
+        }
+
+        #endregion
+
+        #region event handlers
+        
         private void WebBrowserOnBeginNavigation(object sender, BeginNavigationEventArgs beginNavigationEventArgs)
         {
             if (SwitchAccounts == null)
@@ -209,7 +218,7 @@ namespace Phoenix.Windows.Engage
 
             string url = beginNavigationEventArgs.Url;
             var switchAccounts = (SwitchAccountsCommand)SwitchAccounts;
-            switchAccounts.IsEnabled = url.Equals(AuthenticationManager.LocalhostTokenUrl) == false;
+            switchAccounts.IsEnabled = url.StartsWith(AuthenticationManager.LocalhostWidgetUrl) == false;
         }
 
         private void AuthenticationManagerOnBusyStateChanged(object sender, BusyStateEventArgs busyStateEventArgs)
@@ -223,5 +232,7 @@ namespace Phoenix.Windows.Engage
         {
             OnTokenReceived(tokenReceivedEventArgs.Token);
         }
+
+        #endregion
     }
 }
