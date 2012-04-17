@@ -36,9 +36,11 @@
   <ItemGroup>
     <Reference Include="Awesomium.Core, Version=1.6.5.0, Culture=neutral, PublicKeyToken=e1a0d7c8071a5214, processorArchitecture=x86">
       <HintPath>..\lib\Awesomium\Awesomium.Core.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="Awesomium.Windows.Controls, Version=1.6.5.0, Culture=neutral, PublicKeyToken=7a34e179b8b61c39, processorArchitecture=x86">
       <HintPath>..\lib\Awesomium\Awesomium.Windows.Controls.dll</HintPath>
+      <Private>True</Private>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
@@ -56,7 +58,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="SwitchAccountsCommand.cs" />
-    <Compile Include="TokenReceivedEventArgs.cs" />
+    <Compile Include="TokenReceivedRoutedEventArgs.cs" />
     <Page Include="Themes\Generic.xaml">
       <Generator>MSBuild:Compile</Generator>
       <SubType>Designer</SubType>
